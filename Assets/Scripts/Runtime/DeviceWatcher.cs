@@ -19,8 +19,6 @@ namespace MobileDataTransfer.Unity
         /// Gets the available devices.
         /// </summary>
         public IReadOnlyCollection<DeviceInfo> availableDevices => _availableDevices;
-        
-        // TODO: make member instead of static
         private readonly ConcurrentQueue<DeviceEvent> PendingEvents = new ConcurrentQueue<DeviceEvent>();
         
         private DeviceEventCallBack _deviceEventCallback;
@@ -29,7 +27,7 @@ namespace MobileDataTransfer.Unity
         public bool isEnabled { get; private set; }
 
         /// <summary>
-        /// 
+        /// Set DeviceWatcher Enable State
         /// </summary>
         /// <exception cref="iMobileDevice.iDevice.iDeviceException"></exception>
         public void SetEnabled(bool enable)
@@ -60,16 +58,7 @@ namespace MobileDataTransfer.Unity
 
             LibiMobileDevice.Instance.iDevice.idevice_event_subscribe((ref iDeviceEvent deviceEvent, IntPtr data) =>
             {
-                var udid = deviceEvent.udidString;
-                var eventType = deviceEvent.@event;
-                var connectionType = deviceEvent.conn_type;
-
-                PendingEvents.Enqueue(new DeviceEvent()
-                {
-                    udid = udid,
-                    eventType = (DeviceEventType)eventType,
-                    connectionType = (DeviceConnectionType)connectionType
-                });
+                PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
             }, IntPtr.Zero);
             try
             {
@@ -191,6 +180,13 @@ namespace MobileDataTransfer.Unity
             public string udid;
             public DeviceEventType eventType;
             public DeviceConnectionType connectionType;
+
+            public DeviceEvent(iDeviceEvent deviceEvent)
+            {
+                udid = deviceEvent.udidString;
+                eventType = (DeviceEventType)deviceEvent.@event;
+                connectionType = (DeviceConnectionType)deviceEvent.conn_type;
+            }
         }
     }
 
