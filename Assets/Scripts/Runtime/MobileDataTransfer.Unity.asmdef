@@ -1,8 +1,11 @@
 {
     "name": "MobileDataTransfer.Unity",
     "rootNamespace": "MobileDataTransfer.Unity",
-    "references": [],
+    "references": [
+        "GUID:63b4b589da769de47809424efb0a82ad"
+    ],
     "includePlatforms": [
+        "Android",
         "Editor",
         "iOS",
         "LinuxStandalone64",

@@ -11,7 +11,8 @@ public class DeviceScript : MonoBehaviour
 
     private void OnEnable()
     {
-        if (Application.platform != RuntimePlatform.IPhonePlayer)
+        if (Application.platform != RuntimePlatform.IPhonePlayer &&
+            Application.platform != RuntimePlatform.Android)
         {
             enabled = false;
         }
@@ -25,11 +26,13 @@ public class DeviceScript : MonoBehaviour
         using var socket = new DeviceSocketConnection();
         await socket.ConnectAsync(SocketTextureUtility.Port);
         Debug.Log($"Connected to host!");
+        deviceInfoText.text = "Connected to host!";
 
         var texture = await SocketTextureUtility.ReceiveAsync(socket);
         if (texture != null)
         {
             Debug.Log("Texture has been received!");
+            deviceInfoText.text = "Texture has been received!";
             
             image.gameObject.SetActive(true);
             image.texture = texture;

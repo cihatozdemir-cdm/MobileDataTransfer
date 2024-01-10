@@ -13,16 +13,22 @@ namespace MobileDataTransfer.Unity
         /// Name of the device.
         /// </summary>
         public string name { get; }
+        
+        /// <summary>
+        /// Type of the device.
+        /// </summary>
+        public DeviceType deviceType { get; }
 
         /// <summary>
         /// Connection type of the device.
         /// </summary>
         public DeviceConnectionType connectionType { get; }
 
-        public DeviceInfo(string udid, string name, DeviceConnectionType connectionType)
+        public DeviceInfo(string udid, string name, DeviceType deviceType, DeviceConnectionType connectionType)
         {
             this.udid = udid;
             this.name = name;
+            this.deviceType = deviceType;
             this.connectionType = connectionType;
         }
 

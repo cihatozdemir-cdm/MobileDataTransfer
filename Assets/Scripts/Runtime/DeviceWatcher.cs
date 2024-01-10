@@ -5,6 +5,7 @@ using System.Linq;
 using iMobileDevice;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
+using AndroidLib.Unity;
 using UnityEngine;
 
 namespace MobileDataTransfer.Unity
@@ -20,8 +21,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         public IReadOnlyCollection<DeviceInfo> availableDevices => _availableDevices;
         private readonly ConcurrentQueue<DeviceEvent> PendingEvents = new ConcurrentQueue<DeviceEvent>();
-        
-        private DeviceEventCallBack _deviceEventCallback;
+
         private GameObjectEventTrigger _gameObjectEventTrigger;
         
         public bool isEnabled { get; private set; }
@@ -30,6 +30,7 @@ namespace MobileDataTransfer.Unity
         /// Set DeviceWatcher Enable State
         /// </summary>
         /// <exception cref="iMobileDevice.iDevice.iDeviceException"></exception>
+        /// <exception cref="AndroidLib.Unity.aDeviceException"></exception>
         public void SetEnabled(bool enable)
         {
             if (enable)
@@ -42,6 +43,9 @@ namespace MobileDataTransfer.Unity
             }
         }
         
+        /// <summary>
+        /// Initialize the DeviceWatcher and Subscribe Callbacks when Device Connections changed (Android & IOS) 
+        /// </summary>
         private void Start()
         {
             if (isEnabled)
@@ -51,18 +55,21 @@ namespace MobileDataTransfer.Unity
             go.hideFlags = HideFlags.HideAndDontSave;
             _gameObjectEventTrigger = go.AddComponent<GameObjectEventTrigger>();
             _gameObjectEventTrigger.updateCallback = Update;
-            
-            //_deviceEventCallback = GetDeviceEventCallback();
 
-//#if UNITY_IOS
-
-            LibiMobileDevice.Instance.iDevice.idevice_event_subscribe((ref iDeviceEvent deviceEvent, IntPtr data) =>
-            {
-                PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
-            }, IntPtr.Zero);
             try
             {
+                //IOS Subscribe Callback
+                LibiMobileDevice.Instance.iDevice.idevice_event_subscribe((ref iDeviceEvent deviceEvent, IntPtr data) =>
+                {
+                    PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
+                }, IntPtr.Zero).ThrowOnError();
                 
+                //Android Subscribe Callback
+                AndroidConnLib.Instance.androidConnectionManager.SubscribeDeviceEvent(deviceEvent =>
+                {
+                    PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
+                }).ThrowOnError();
+
             }
             catch (Exception)
             {
@@ -70,12 +77,13 @@ namespace MobileDataTransfer.Unity
                 _gameObjectEventTrigger = null;
                 throw;
             }
-//#endif
-
             
             isEnabled = true;
         }
         
+        /// <summary>
+        /// Clear all data and Unsubscribe the Callbacks
+        /// </summary>
         private void Stop()
         {
             if (!isEnabled)
@@ -87,11 +95,15 @@ namespace MobileDataTransfer.Unity
                 _gameObjectEventTrigger = null;
             }
 
-            _deviceEventCallback = null;
             isEnabled = false;
+            
             LibiMobileDevice.Instance.iDevice.idevice_event_unsubscribe().ThrowOnError();
+            AndroidConnLib.Instance.androidConnectionManager.UnSubscribeAllDeviceEvents().ThrowOnError();
         }
 
+        /// <summary>
+        /// Check is Any Event Pending
+        /// </summary>
         private void Update()
         {
             while (PendingEvents.TryDequeue(out var deviceEvent))
@@ -99,14 +111,28 @@ namespace MobileDataTransfer.Unity
                 var deviceInfo = availableDevices.FirstOrDefault(d => d.udid == deviceEvent.udid);
                 if (deviceInfo.udid != deviceEvent.udid)
                 {
-                    deviceInfo = new DeviceInfo(deviceEvent.udid, "", deviceEvent.connectionType);
-                    PopulateDeviceName(ref deviceInfo);
+                    deviceInfo = new DeviceInfo(deviceEvent.udid, "", deviceEvent.deviceType, deviceEvent.connectionType);
+
+                    //Get Device Name
+                    switch (deviceInfo.deviceType)
+                    {
+                        case DeviceType.Android:
+                            PopulateAndroidDeviceName(ref deviceInfo);
+                            break;
+                        case DeviceType.IOS:
+                            PopulateIOSDeviceName(ref deviceInfo);
+                            break;
+                        case DeviceType.Unknown:
+                        default:
+                            break;
+                    }
                 }
                 
                 switch (deviceEvent.eventType)
                 {
                     case DeviceEventType.DeviceAdd:
                         _availableDevices.Add(deviceInfo);
+                        Debug.Log("New Device Added");
                         OnDeviceAdded(new DeviceEventArgs(deviceInfo));
                         break;
                     case DeviceEventType.DeviceRemove:
@@ -122,7 +148,7 @@ namespace MobileDataTransfer.Unity
             }
         }
         
-        private static bool PopulateDeviceName(ref DeviceInfo deviceInfo)
+        private static bool PopulateIOSDeviceName(ref DeviceInfo deviceInfo)
         {
             iDeviceHandle deviceHandle = null;
             LockdownClientHandle lockdownClientHandle = null;
@@ -141,7 +167,7 @@ namespace MobileDataTransfer.Unity
                 lockdownApi.lockdownd_get_device_name(lockdownClientHandle, out var deviceName)
                     .ThrowOnError();
                 
-                deviceInfo = new DeviceInfo(deviceInfo.udid, deviceName, deviceInfo.connectionType);
+                deviceInfo = new DeviceInfo(deviceInfo.udid, deviceName, deviceInfo.deviceType, deviceInfo.connectionType);
                 return true;
             }
             catch (Exception e)
@@ -153,6 +179,24 @@ namespace MobileDataTransfer.Unity
             {
                 deviceHandle?.Dispose();
                 lockdownClientHandle?.Dispose();
+            }
+        }
+
+        private static bool PopulateAndroidDeviceName(ref DeviceInfo deviceInfo)
+        {
+            try
+            {
+                var androidConnectionManager = AndroidConnLib.Instance.androidConnectionManager;
+                androidConnectionManager.GetDeviceName(deviceInfo.udid, out var deviceName)
+                    .ThrowOnError();
+
+                deviceInfo = new DeviceInfo(deviceInfo.udid, deviceName, deviceInfo.deviceType, deviceInfo.connectionType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
             }
         }
 
@@ -174,20 +218,6 @@ namespace MobileDataTransfer.Unity
         public event Action<DeviceEventArgs> deviceAdded;
         public event Action<DeviceEventArgs> deviceRemoved;
         public event Action<DeviceEventArgs> devicePaired;
-        
-        private struct DeviceEvent
-        {
-            public string udid;
-            public DeviceEventType eventType;
-            public DeviceConnectionType connectionType;
-
-            public DeviceEvent(iDeviceEvent deviceEvent)
-            {
-                udid = deviceEvent.udidString;
-                eventType = (DeviceEventType)deviceEvent.@event;
-                connectionType = (DeviceConnectionType)deviceEvent.conn_type;
-            }
-        }
     }
 
     public readonly struct DeviceEventArgs
@@ -200,20 +230,6 @@ namespace MobileDataTransfer.Unity
         public DeviceEventArgs(DeviceInfo deviceInfo)
         {
             this.deviceInfo = deviceInfo;
-        }
-    }
-
-    public class DeviceEventCallBack
-    {
-        public string udid { get; private set; }
-        public DeviceEventType deviceEventType { get; private set; }
-        public DeviceConnectionType deviceConnectionType { get; private set; }
-
-        public DeviceEventCallBack(string udid, DeviceEventType deviceEventType, DeviceConnectionType deviceConnectionType)
-        {
-            this.udid = udid;
-            this.deviceEventType = deviceEventType;
-            this.deviceConnectionType = deviceConnectionType;
         }
     }
 }

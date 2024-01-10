@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using iMobileDevice.iDevice;
@@ -17,6 +18,7 @@ public class HostScript : MonoBehaviour
     private DeviceWatcher _deviceWatcher;
     private string _deviceId;
 
+    private ISocketConnection socket;
     private CancellationTokenSource _cancellationTokenSource;
     
     private void OnEnable()
@@ -36,7 +38,8 @@ public class HostScript : MonoBehaviour
 
     private void OnDisable()
     {
-        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource?.Cancel();
+        socket?.Dispose();
     }
 
     private void Start()
@@ -73,7 +76,6 @@ public class HostScript : MonoBehaviour
         deviceInfoText.text = $"{deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}]";
 
         Debug.Log($"Trying to connect to the device on port {SocketTextureUtility.Port}...");
-        ISocketConnection socket = null;
 
         var isConnected = false;
         while (!isConnected && !_cancellationTokenSource.IsCancellationRequested)
@@ -92,6 +94,14 @@ public class HostScript : MonoBehaviour
                 socket?.Dispose();
                 socket = null;
             }
+            catch (Exception ex)
+            {
+                Debug.Log($"Connection failed due to {ex}. Try53 to connect after {connectionWaitTime} secs...");
+                
+                isConnected = false;
+                socket?.Dispose();
+                socket = null;
+            }
 
             await Task.Delay((int) (connectionWaitTime * 1000), _cancellationTokenSource.Token);
         }
@@ -102,7 +112,7 @@ public class HostScript : MonoBehaviour
         Debug.Log($"Connection has been established!");
 
         _deviceId = e.deviceInfo.udid;
-        
+        return;
         var success = await SocketTextureUtility.SendAsync(socket, textureToSend);
         if (success)
         {

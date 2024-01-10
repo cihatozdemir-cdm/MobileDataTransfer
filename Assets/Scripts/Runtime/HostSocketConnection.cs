@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using iMobileDevice;
-using iMobileDevice.iDevice;
 
 namespace MobileDataTransfer.Unity
 {
@@ -10,40 +8,34 @@ namespace MobileDataTransfer.Unity
     {
         public DeviceInfo deviceInfo { get; }
 
-        private byte[] _buffer = new byte[4096];
-        private iDeviceHandle _deviceHandle;
-        private iDeviceConnectionHandle _connectionHandle;
+        private readonly ISocketConnection _targetSocketConnection;
         
         public HostSocketConnection(DeviceInfo deviceInfo)
         {
             this.deviceInfo = deviceInfo;
+
+            _targetSocketConnection = GetTargetDeviceSocketConnection();
+        }
+
+        private ISocketConnection GetTargetDeviceSocketConnection()
+        {
+            return deviceInfo.deviceType switch
+            {
+                DeviceType.Android => new HostSocketAndroidConnection(deviceInfo),
+                DeviceType.IOS => new HostSocketIOSConnection(deviceInfo),
+                DeviceType.Unknown => throw new ArgumentOutOfRangeException(),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
         
         public void Dispose()
         {
-            _deviceHandle?.Dispose();
-            _connectionHandle?.Dispose();
+            _targetSocketConnection.Dispose();
         }
         
         public void Connect(int port)
         {
-            iDeviceHandle deviceHandle = null;
-            iDeviceConnectionHandle connectionHandle = null;
-
-            try
-            {
-                var deviceApi = LibiMobileDevice.Instance.iDevice;
-                deviceApi.idevice_new(out deviceHandle, deviceInfo.udid).ThrowOnError();
-                deviceApi.idevice_connect(deviceHandle, (ushort) port, out connectionHandle).ThrowOnError();
-                _deviceHandle = deviceHandle;
-                _connectionHandle = connectionHandle;
-            }
-            catch (Exception)
-            {
-                deviceHandle?.Dispose();
-                connectionHandle?.Dispose();
-                throw;
-            }
+            _targetSocketConnection.Connect(port);
         }
 
         /// <summary>
@@ -51,11 +43,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         public void Disconnect()
         {
-            _deviceHandle?.Dispose();
-            _deviceHandle = null;
-            
-            _connectionHandle?.Dispose();
-            _connectionHandle = null;
+            _targetSocketConnection.Disconnect();
         }
 
         /// <summary>
@@ -66,11 +54,7 @@ namespace MobileDataTransfer.Unity
         /// <returns>The number of bytes actually sent.</returns>
         public int Send(byte[] buffer, int size)
         {
-            var deviceApi = LibiMobileDevice.Instance.iDevice;
-
-            uint sentBytes = 0;
-            deviceApi.idevice_connection_send(_connectionHandle, buffer, (uint) size, ref sentBytes).ThrowOnError();
-            return (int) sentBytes;
+            return _targetSocketConnection.Send(buffer, size);
         }
 
         /// <summary>
@@ -82,37 +66,7 @@ namespace MobileDataTransfer.Unity
         /// <returns></returns>
         public int Receive(byte[] buffer, int length)
         {
-            var deviceApi = LibiMobileDevice.Instance.iDevice;
-
-            // Use actual buffer if given buffer length is small.
-            if (_buffer.Length > length)
-            {
-                uint recvBytes = 0;
-                deviceApi.idevice_connection_receive(_connectionHandle, buffer, (uint) length, ref recvBytes)
-                    .ThrowOnError();
-                return (int) recvBytes;
-            }
-
-            // Read buffered.
-            var recvTotal = 0;
-
-            while (recvTotal < length)
-            {
-                var lengthRead = Math.Min(length - recvTotal, _buffer.Length);
-
-                uint recv = 0;
-                deviceApi.idevice_connection_receive(_connectionHandle, _buffer, (uint) lengthRead, ref recv)
-                    .ThrowOnError();
-                if (recv == 0)
-                {
-                    break;
-                }
-                
-                Array.Copy(_buffer, 0, buffer, recvTotal, recv);
-                recvTotal += (int) recv;
-            }
-
-            return recvTotal;
+            return _targetSocketConnection.Receive(buffer, length);
         }
         
         /// <summary>
@@ -120,7 +74,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         public async Task<int> SendAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
         {
-            return await Task.Run(() => Send(buffer, length), cancellationToken);
+            return await _targetSocketConnection.SendAsync(buffer, length, cancellationToken);
         }
 
         /// <summary>
@@ -128,7 +82,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         public async Task<int> ReceiveAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
         {
-            return await Task.Run(() => Receive(buffer, length), cancellationToken);
+            return await _targetSocketConnection.ReceiveAsync(buffer, length, cancellationToken);
         }
 
     }

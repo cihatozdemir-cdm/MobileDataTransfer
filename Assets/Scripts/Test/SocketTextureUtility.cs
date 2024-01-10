@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class SocketTextureUtility
 {
-    public const int Port = 7799;
+    public const int Port = 5789;
     
     public static async Task<bool> SendAsync(ISocketConnection socket, Texture2D texture)
     {
