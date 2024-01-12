@@ -1,3 +1,4 @@
+#if UNITY_STANDALONE || UNITY_EDITOR
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,9 +111,8 @@ public class HostScript : MonoBehaviour
             return;
         
         Debug.Log($"Connection has been established!");
-
         _deviceId = e.deviceInfo.udid;
-        return;
+        
         var success = await SocketTextureUtility.SendAsync(socket, textureToSend);
         if (success)
         {
@@ -163,3 +163,4 @@ public class HostScript : MonoBehaviour
         deviceInfoText.text = $"{deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}] [Paired]";
     }
 }
+#endif

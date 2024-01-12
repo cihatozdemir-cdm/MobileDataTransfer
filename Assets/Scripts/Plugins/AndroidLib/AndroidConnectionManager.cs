@@ -10,8 +10,9 @@ namespace AndroidLib.Unity
         public class AndroidConnectionManager
         {
                 private readonly AndroidController _androidController;
-                private readonly CancellationTokenSource _cancellationToken;
                 private aDeviceEventCallback _onEventAnyDevice;
+                private Task _deviceSearchTask;
+                private readonly CancellationTokenSource _cancellationToken;
 
                 public readonly List<string> ConnectedDevices = new List<string>();
 
@@ -21,8 +22,13 @@ namespace AndroidLib.Unity
                 {
                         _androidController = AndroidController.Instance;
                         _cancellationToken = new CancellationTokenSource();
+                }
+
+                public void StartSearch()
+                {
+                        if (_deviceSearchTask != null && _deviceSearchTask.Status == TaskStatus.Running) return;
                         
-                        Task.Run(SearchAndroidDevices);
+                        _deviceSearchTask = Task.Run(SearchAndroidDevices);
                 }
 
                 /// <summary>
@@ -31,6 +37,10 @@ namespace AndroidLib.Unity
                 public void Dispose()
                 {
                         _cancellationToken.Cancel();
+                        ConnectedDevices.Clear();
+                        
+                        _onEventAnyDevice = null;
+                        _deviceSearchTask = null;
                 }
                 
                 /// <summary>
@@ -105,6 +115,7 @@ namespace AndroidLib.Unity
                         if (_onEventAnyDevice == null)
                         {
                                 _onEventAnyDevice = eventCallback;
+                                StartSearch();
                         }
                         else
                         {
@@ -120,7 +131,7 @@ namespace AndroidLib.Unity
                 /// <returns></returns>
                 public aDeviceError UnSubscribeAllDeviceEvents()
                 {
-                        _onEventAnyDevice = null;
+                        Dispose();
 
                         return aDeviceError.Success;
                 }

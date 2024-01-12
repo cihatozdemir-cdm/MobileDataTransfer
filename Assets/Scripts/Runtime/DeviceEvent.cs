@@ -1,5 +1,9 @@
-﻿using AndroidLib.Unity;
+﻿#if UNITY_ANDROID || UNITY_STANDALONE || UNITY_EDITOR
+using AndroidLib.Unity;
+#endif
+#if UNITY_IOS || UNITY_STANDALONE || UNITY_EDITOR
 using iMobileDevice.iDevice;
+#endif
 
 namespace MobileDataTransfer.Unity
 {
@@ -18,6 +22,7 @@ namespace MobileDataTransfer.Unity
             this.connectionType = connectionType;
         }
 
+#if UNITY_IOS || UNITY_STANDALONE || UNITY_EDITOR
         public DeviceEvent(iDeviceEvent deviceEvent)
         {
             udid = deviceEvent.udidString;
@@ -25,7 +30,9 @@ namespace MobileDataTransfer.Unity
             connectionType = (DeviceConnectionType)deviceEvent.conn_type;
             deviceType = DeviceType.IOS;
         }
-        
+#endif
+      
+#if UNITY_ANDROID || UNITY_STANDALONE || UNITY_EDITOR
         public DeviceEvent(aDeviceEvent deviceEvent)
         {
             udid = deviceEvent.serialNumber;
@@ -33,5 +40,6 @@ namespace MobileDataTransfer.Unity
             connectionType = (DeviceConnectionType)deviceEvent.connectionType;
             deviceType = DeviceType.Android;
         }
+#endif
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_STANDALONE || UNITY_EDITOR
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -132,7 +133,6 @@ namespace MobileDataTransfer.Unity
                 {
                     case DeviceEventType.DeviceAdd:
                         _availableDevices.Add(deviceInfo);
-                        Debug.Log("New Device Added");
                         OnDeviceAdded(new DeviceEventArgs(deviceInfo));
                         break;
                     case DeviceEventType.DeviceRemove:
@@ -233,3 +233,4 @@ namespace MobileDataTransfer.Unity
         }
     }
 }
+#endif
