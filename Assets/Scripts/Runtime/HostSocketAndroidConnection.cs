@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
+using AndroidLib.Unity;
+using RegawMOD.Android;
 
 namespace MobileDataTransfer.Unity
 {
     public class HostSocketAndroidConnection : ISocketConnection
     {
-        public DeviceInfo deviceInfo { get; }
+        private const string LocalHost = "127.0.0.1";
+        private DeviceInfo deviceInfo { get; }
 
-        private byte[] _buffer = new byte[4096];
         private Socket _socket;
-        private Socket _deviceSocket;
 
 
         public HostSocketAndroidConnection(DeviceInfo deviceInfo)
@@ -21,36 +20,32 @@ namespace MobileDataTransfer.Unity
             this.deviceInfo = deviceInfo;
         }
 
-        public void Dispose()
-        {
-            _socket?.Shutdown(SocketShutdown.Both);
-            _socket?.Close();
-            _socket?.Dispose();
-            Debug.LogWarning("Socket Disposed");
-            _deviceSocket?.Shutdown(SocketShutdown.Both);
-            _deviceSocket?.Close();
-            _deviceSocket?.Dispose();
-        }
-
         public void Connect(int port)
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var device = AndroidConnLib.Instance.androidController.GetConnectedDevice(deviceInfo.udid);
+            if (device == null)
+            {
+                throw new aDeviceException(aDeviceError.NoDevice);
+            }
             
-            socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
+            Adb.PortForward(device, port, port);
+            //AdbExtensions.PortReverse(device, port, port);
             
-            //socket.Listen(1);
-            //var deviceSocket = socket.Accept();
-            //socket.
-            socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
-
-            _socket = socket;
-            //_deviceSocket = deviceSocket;
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket.Connect(LocalHost, port);
         }
 
         public void Disconnect()
         {
             _socket?.Disconnect(false);
-            _deviceSocket?.Disconnect(false);
+            _socket = null;
+        }
+        
+        public void Dispose()
+        {
+            _socket?.Shutdown(SocketShutdown.Both);
+            _socket?.Close();
+            _socket?.Dispose();
         }
 
         public int Send(byte[] buffer, int size)

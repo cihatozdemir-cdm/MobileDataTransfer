@@ -16,7 +16,8 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "iMobileDevice-net.dll"
+        "iMobileDevice-net.dll",
+        "AndroidLib.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

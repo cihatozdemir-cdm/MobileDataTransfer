@@ -27,6 +27,20 @@ namespace MobileDataTransfer.Unity
         {
             _serverSocket?.Disconnect(false);
             _socket?.Disconnect(false);
+
+            _serverSocket = null;
+            _socket = null;
+        }
+        
+        public void Dispose()
+        {
+            _socket?.Shutdown(SocketShutdown.Both);
+            _socket?.Close();
+            _socket?.Dispose();
+            
+            _serverSocket?.Shutdown(SocketShutdown.Both);
+            _serverSocket?.Close();
+            _serverSocket?.Dispose();
         }
 
         public int Send(byte[] buffer, int length)
@@ -92,17 +106,6 @@ namespace MobileDataTransfer.Unity
             }
 
             return totalReceivedBytes;
-        }
-        
-        public void Dispose()
-        {
-            _socket?.Shutdown(SocketShutdown.Both);
-            _socket?.Close();
-            _socket?.Dispose();
-            
-            _serverSocket?.Shutdown(SocketShutdown.Both);
-            _serverSocket?.Close();
-            _serverSocket?.Dispose();
         }
     }
 }

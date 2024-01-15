@@ -97,7 +97,7 @@ public class HostScript : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.Log($"Connection failed due to {ex}. Try53 to connect after {connectionWaitTime} secs...");
+                Debug.Log($"Connection failed due to {ex}. Trying to connect after {connectionWaitTime} secs...");
                 
                 isConnected = false;
                 socket?.Dispose();
