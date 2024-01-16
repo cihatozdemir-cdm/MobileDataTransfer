@@ -1,0 +1,12 @@
+{
+  "name": "com.cihat.mobiledatatransfer",
+  "version": "1.0.0",
+  "displayName": "Mobile Data Transfer for Unity",
+  "description": "Simple data transfer and connection checker between mobile and standalone device.",
+  "unity": "2019.1",
+  "author": {
+    "name": "Cihat Özdemir",
+    "email": "cihat.ozdemir@yahoo.com",
+    "url": "cihatozdemir.com.tr"
+  }
+}
