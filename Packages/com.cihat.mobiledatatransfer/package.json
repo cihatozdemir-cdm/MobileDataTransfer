@@ -5,6 +5,7 @@
   "description": "Simple data transfer and connection checker between mobile and standalone device.",
   "unity": "2019.1",
   "documentationUrl": "https://cihatozdemir.gitbook.io/mobile-data-transfer/",
+  "dependencies": {},
   "samples": [
     {
       "displayName": "Simple Data Transfer",
@@ -12,7 +13,6 @@
       "path": "Samples~/Samples"
     }
   ],
-
   "author": {
     "name": "Cihat Özdemir",
     "email": "cihat.ozdemir@yahoo.com",
