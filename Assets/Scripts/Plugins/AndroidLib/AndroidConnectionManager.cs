@@ -2,28 +2,25 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AndroidLib.Unity.Extensions;
-using UnityEngine;
 using RegawMOD.Android;
 
 namespace AndroidLib.Unity
 {
         public class AndroidConnectionManager
         {
-                private readonly AndroidController _androidController;
+                private readonly AndroidController _androidController = AndroidController.Instance;
+                private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+                
                 private aDeviceEventCallback _onEventAnyDevice;
                 private Task _deviceSearchTask;
-                private readonly CancellationTokenSource _cancellationToken;
 
                 public readonly List<string> ConnectedDevices = new List<string>();
 
                 public delegate void aDeviceEventCallback(aDeviceEvent deviceEvent);
 
-                public AndroidConnectionManager()
-                {
-                        _androidController = AndroidController.Instance;
-                        _cancellationToken = new CancellationTokenSource();
-                }
-
+                /// <summary>
+                /// Start Device Search
+                /// </summary>
                 public void StartSearch()
                 {
                         if (_deviceSearchTask != null && _deviceSearchTask.Status == TaskStatus.Running) return;
@@ -70,8 +67,6 @@ namespace AndroidLib.Unity
                 private async Task SearchAndroidDevices()
                 {
                         const int searchRefreshDelayInSecond = 1;
-                        
-                        Debug.Log("Search Connected Android Devices");
 
                         while (!_cancellationToken.IsCancellationRequested)
                         {
@@ -106,10 +101,11 @@ namespace AndroidLib.Unity
                 }
 
                 /// <summary>
-                /// 
+                /// Register a callback function that will be called when device add/remove
+                /// events occur.
                 /// </summary>
-                /// <param name="eventCallback"></param>
-                /// <returns></returns>
+                /// <param name="eventCallback">Callback function to call.</param>
+                /// <returns>aDeviceError.Success on success or an error value when an error occurred.</returns>
                 public aDeviceError SubscribeDeviceEvent(aDeviceEventCallback eventCallback)
                 {
                         if (_onEventAnyDevice == null)
@@ -126,7 +122,7 @@ namespace AndroidLib.Unity
                 }
 
                 /// <summary>
-                /// 
+                /// Clear all data and Stop Searching devices 
                 /// </summary>
                 /// <returns></returns>
                 public aDeviceError UnSubscribeAllDeviceEvents()
@@ -137,7 +133,7 @@ namespace AndroidLib.Unity
                 }
 
                 /// <summary>
-                /// 
+                /// Get All Connected Devices
                 /// </summary>
                 /// <param name="devices"></param>
                 /// <returns></returns>

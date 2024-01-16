@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_STANDALONE || UNITY_EDITOR
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using iMobileDevice;
@@ -10,7 +11,7 @@ namespace MobileDataTransfer.Unity
     {
         public DeviceInfo deviceInfo { get; }
 
-        private byte[] _buffer = new byte[4096];
+        private readonly byte[] _buffer = new byte[4096];
         private iDeviceHandle _deviceHandle;
         private iDeviceConnectionHandle _connectionHandle;
         
@@ -19,12 +20,10 @@ namespace MobileDataTransfer.Unity
             this.deviceInfo = deviceInfo;
         }
         
-        public void Dispose()
-        {
-            _deviceHandle?.Dispose();
-            _connectionHandle?.Dispose();
-        }
-        
+        /// <summary>
+        /// Connect with target device using port
+        /// </summary>
+        /// <param name="port"></param>
         public void Connect(int port)
         {
             iDeviceHandle deviceHandle = null;
@@ -56,6 +55,15 @@ namespace MobileDataTransfer.Unity
             
             _connectionHandle?.Dispose();
             _connectionHandle = null;
+        }
+        
+        /// <summary>
+        /// Dispose Connection
+        /// </summary>
+        public void Dispose()
+        {
+            _deviceHandle?.Dispose();
+            _connectionHandle?.Dispose();
         }
 
         /// <summary>
@@ -132,3 +140,4 @@ namespace MobileDataTransfer.Unity
         }
     }
 }
+#endif

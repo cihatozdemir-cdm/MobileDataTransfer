@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using iMobileDevice;
 using iMobileDevice.iDevice;
-using iMobileDevice.Lockdown;
 using AndroidLib.Unity;
+using MobileDataTransfer.Unity.Extensions;
 using UnityEngine;
 
 namespace MobileDataTransfer.Unity
@@ -16,15 +16,18 @@ namespace MobileDataTransfer.Unity
         private const string Label = "MobileDataTransfer.Unity.DeviceWatcher";
         
         private readonly HashSet<DeviceInfo> _availableDevices = new HashSet<DeviceInfo>();
+        private readonly ConcurrentQueue<DeviceEvent> _pendingEvents = new ConcurrentQueue<DeviceEvent>();
+
+        private GameObjectEventTrigger _gameObjectEventTrigger;
 
         /// <summary>
         /// Gets the available devices.
         /// </summary>
         public IReadOnlyCollection<DeviceInfo> availableDevices => _availableDevices;
-        private readonly ConcurrentQueue<DeviceEvent> PendingEvents = new ConcurrentQueue<DeviceEvent>();
-
-        private GameObjectEventTrigger _gameObjectEventTrigger;
         
+        /// <summary>
+        /// Get Device Watcher Enable state
+        /// </summary>
         public bool isEnabled { get; private set; }
 
         /// <summary>
@@ -62,13 +65,13 @@ namespace MobileDataTransfer.Unity
                 //IOS Subscribe Callback
                 LibiMobileDevice.Instance.iDevice.idevice_event_subscribe((ref iDeviceEvent deviceEvent, IntPtr data) =>
                 {
-                    PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
+                    _pendingEvents.Enqueue(new DeviceEvent(deviceEvent));
                 }, IntPtr.Zero).ThrowOnError();
                 
                 //Android Subscribe Callback
                 AndroidConnLib.Instance.androidConnectionManager.SubscribeDeviceEvent(deviceEvent =>
                 {
-                    PendingEvents.Enqueue(new DeviceEvent(deviceEvent));
+                    _pendingEvents.Enqueue(new DeviceEvent(deviceEvent));
                 }).ThrowOnError();
 
             }
@@ -107,7 +110,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         private void Update()
         {
-            while (PendingEvents.TryDequeue(out var deviceEvent))
+            while (_pendingEvents.TryDequeue(out var deviceEvent))
             {
                 var deviceInfo = availableDevices.FirstOrDefault(d => d.udid == deviceEvent.udid);
                 if (deviceInfo.udid != deviceEvent.udid)
@@ -115,18 +118,7 @@ namespace MobileDataTransfer.Unity
                     deviceInfo = new DeviceInfo(deviceEvent.udid, "", deviceEvent.deviceType, deviceEvent.connectionType);
 
                     //Get Device Name
-                    switch (deviceInfo.deviceType)
-                    {
-                        case DeviceType.Android:
-                            PopulateAndroidDeviceName(ref deviceInfo);
-                            break;
-                        case DeviceType.IOS:
-                            PopulateIOSDeviceName(ref deviceInfo);
-                            break;
-                        case DeviceType.Unknown:
-                        default:
-                            break;
-                    }
+                    deviceInfo.PopulateDeviceName(Label);
                 }
                 
                 switch (deviceEvent.eventType)
@@ -145,58 +137,6 @@ namespace MobileDataTransfer.Unity
                     default:
                         return;
                 }
-            }
-        }
-        
-        private static bool PopulateIOSDeviceName(ref DeviceInfo deviceInfo)
-        {
-            iDeviceHandle deviceHandle = null;
-            LockdownClientHandle lockdownClientHandle = null;
-
-            try
-            {
-                var deviceApi = LibiMobileDevice.Instance.iDevice;
-                var lockdownApi = LibiMobileDevice.Instance.Lockdown;
-
-                deviceApi.idevice_new(out deviceHandle, deviceInfo.udid)
-                    .ThrowOnError();
-
-                lockdownApi.lockdownd_client_new_with_handshake(deviceHandle, out lockdownClientHandle, Label)
-                    .ThrowOnError();
-
-                lockdownApi.lockdownd_get_device_name(lockdownClientHandle, out var deviceName)
-                    .ThrowOnError();
-                
-                deviceInfo = new DeviceInfo(deviceInfo.udid, deviceName, deviceInfo.deviceType, deviceInfo.connectionType);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning(e.Message);
-                return false;
-            }
-            finally
-            {
-                deviceHandle?.Dispose();
-                lockdownClientHandle?.Dispose();
-            }
-        }
-
-        private static bool PopulateAndroidDeviceName(ref DeviceInfo deviceInfo)
-        {
-            try
-            {
-                var androidConnectionManager = AndroidConnLib.Instance.androidConnectionManager;
-                androidConnectionManager.GetDeviceName(deviceInfo.udid, out var deviceName)
-                    .ThrowOnError();
-
-                deviceInfo = new DeviceInfo(deviceInfo.udid, deviceName, deviceInfo.deviceType, deviceInfo.connectionType);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return false;
             }
         }
 

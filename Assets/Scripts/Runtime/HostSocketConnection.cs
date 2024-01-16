@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_STANDALONE || UNITY_EDITOR
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,11 @@ namespace MobileDataTransfer.Unity
             _targetSocketConnection = GetTargetDeviceSocketConnection();
         }
 
+        /// <summary>
+        /// Get Target Device Connection class To Connect with.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         private ISocketConnection GetTargetDeviceSocketConnection()
         {
             return deviceInfo.deviceType switch
@@ -28,11 +34,10 @@ namespace MobileDataTransfer.Unity
             };
         }
         
-        public void Dispose()
-        {
-            _targetSocketConnection.Dispose();
-        }
-        
+        /// <summary>
+        /// Connect with target device using port
+        /// </summary>
+        /// <param name="port"></param>
         public void Connect(int port)
         {
             _targetSocketConnection.Connect(port);
@@ -44,6 +49,14 @@ namespace MobileDataTransfer.Unity
         public void Disconnect()
         {
             _targetSocketConnection.Disconnect();
+        }
+        
+        /// <summary>
+        /// Dispose Connection
+        /// </summary>
+        public void Dispose()
+        {
+            _targetSocketConnection.Dispose();
         }
 
         /// <summary>
@@ -87,3 +100,4 @@ namespace MobileDataTransfer.Unity
 
     }
 }
+#endif
