@@ -1,0 +1,21 @@
+{
+  "name": "com.cihat.mobiledatatransfer",
+  "version": "1.0.0",
+  "displayName": "Mobile Data Transfer",
+  "description": "Simple data transfer and connection checker between mobile and standalone device.",
+  "unity": "2019.1",
+  "documentationUrl": "https://cihatozdemir.gitbook.io/mobile-data-transfer/",
+  "samples": [
+    {
+      "displayName": "Simple Data Transfer",
+      "description": "Simple connection and data transfer with mobile and standalone",
+      "path": "Samples~/Samples"
+    }
+  ],
+
+  "author": {
+    "name": "Cihat Özdemir",
+    "email": "cihat.ozdemir@yahoo.com",
+    "url": "cihatozdemir.com.tr"
+  }
+}
