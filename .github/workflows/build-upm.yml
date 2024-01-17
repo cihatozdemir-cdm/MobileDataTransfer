@@ -1,25 +1,28 @@
-name: CI
+name: Deploy Package
+
+# Controls when the action will run. 
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches:
-    - master
+    branches: [ master ]
 
-permissions:
-  pull-requests: write
-  issues: write
-  repository-projects: write
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  split-upm:
-    name: split upm branch
+  # This workflow contains a single job called "build"
+  deploy:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: split upm branch
-      run: |
-        git subtree split -P "$PKG_ROOT" -b upm
-        git push -u origin upm
-      env:
-        PKG_ROOT: Packages/com.cihat.mobiledatatransfer
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Publish Unity package
+        uses: cdmvision/action-upm-publish@v1
+        with: 
+          name: 'com.cihat.mobiledatatransfer'
+          upmBranch: 'upm'
