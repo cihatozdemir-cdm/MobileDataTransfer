@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "displayName": "Mobile Data Transfer",
   "description": "Simple data transfer and connection checker between mobile and standalone device.",
-  "unity": "2019.1",
+  "unity": "2017.1",
+  "license": "MIT",
   "documentationUrl": "https://cihatozdemir.gitbook.io/mobile-data-transfer/",
+  "keywords": [
+    "usb",
+    "data",
+    "connection"
+  ],
   "dependencies": {},
   "samples": [
     {

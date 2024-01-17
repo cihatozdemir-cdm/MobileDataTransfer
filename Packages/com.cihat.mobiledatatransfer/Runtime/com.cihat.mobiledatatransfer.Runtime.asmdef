@@ -1,5 +1,5 @@
 {
-    "name": "com.cihat.mobiledatatransfer",
+    "name": "com.cihat.mobiledatatransfer.Runtime",
     "rootNamespace": "MobileDataTransfer.Unity",
     "references": [
         "GUID:63b4b589da769de47809424efb0a82ad"
