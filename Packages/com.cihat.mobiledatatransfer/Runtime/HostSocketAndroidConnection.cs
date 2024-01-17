@@ -8,24 +8,22 @@ using RegawMOD.Android;
 
 namespace MobileDataTransfer.Unity
 {
-    public class HostSocketAndroidConnection : ISocketConnection
+    public class HostSocketAndroidConnection : HostSocketConnection
     {
         private const string LocalHost = "127.0.0.1";
-        private DeviceInfo deviceInfo { get; }
 
         private Socket _socket;
 
 
-        public HostSocketAndroidConnection(DeviceInfo deviceInfo)
+        public HostSocketAndroidConnection(DeviceInfo deviceInfo) : base(deviceInfo)
         {
-            this.deviceInfo = deviceInfo;
         }
 
         /// <summary>
         /// Connect with target device using port
         /// </summary>
         /// <param name="port"></param>
-        public void Connect(int port)
+        public override void Connect(int port)
         {
             var device = AndroidConnLib.Instance.androidController.GetConnectedDevice(deviceInfo.udid);
             if (device == null)
@@ -43,7 +41,7 @@ namespace MobileDataTransfer.Unity
         /// <summary>
         /// Disconnect from the device and clean up resources.
         /// </summary>
-        public void Disconnect()
+        public override void Disconnect()
         {
             _socket?.Disconnect(false);
             _socket = null;
@@ -52,7 +50,7 @@ namespace MobileDataTransfer.Unity
         /// <summary>
         /// Dispose Connection
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _socket?.Shutdown(SocketShutdown.Both);
             _socket?.Close();
@@ -65,7 +63,7 @@ namespace MobileDataTransfer.Unity
         /// <param name="buffer">Buffer with data to send.</param>
         /// <param name="size">Size of the buffer to send.</param>
         /// <returns>The number of bytes actually sent.</returns>
-        public int Send(byte[] buffer, int size)
+        public override int Send(byte[] buffer, int size)
         {
             return SendInternal(buffer, size);
         }
@@ -76,25 +74,9 @@ namespace MobileDataTransfer.Unity
         /// <param name="buffer">Buffer that will be filled with the received data.</param>
         /// <param name="size">Size of the buffer to receive.</param>
         /// <returns>The number of bytes actually receive.</returns>
-        public int Receive(byte[] buffer, int size)
+        public override int Receive(byte[] buffer, int size)
         {
             return ReceiveInternal(buffer, size);
-        }
-
-        /// <summary>
-        /// Async version <see cref="Send"/>.
-        /// </summary>
-        public async Task<int> SendAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() => Send(buffer, length), cancellationToken);
-        }
-
-        /// <summary>
-        /// Async version <see cref="Receive"/>.
-        /// </summary>
-        public async Task<int> ReceiveAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() => Receive(buffer, length), cancellationToken);
         }
 
         /// <summary>

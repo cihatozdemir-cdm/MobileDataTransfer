@@ -9,7 +9,20 @@ namespace MobileDataTransfer.Unity
     public class DeviceSocketConnection : ISocketConnection
     {
         private Socket _serverSocket;
-        private Socket _socket;
+        public Socket socket { get; private set; }
+        
+        /// <summary>
+        /// Connect with target device using socket
+        /// </summary>
+        /// <param name="acceptSocket"></param>
+        public void Connect(Socket acceptSocket)
+        {
+            if (socket != null && socket.Connected)
+                throw new InvalidOperationException("Disconnect current socket before using a new socket.");
+
+            socket?.Dispose();
+            socket = acceptSocket;
+        }
 
         /// <summary>
         /// Connect with target device using port
@@ -17,14 +30,11 @@ namespace MobileDataTransfer.Unity
         /// <param name="port"></param>
         public void Connect(int port)
         {
-            var serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, port));
-            serverSocket.Listen(1);
+            _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, port));
+            _serverSocket.Listen(1);
             
-            var socket = serverSocket.Accept();
-
-            _serverSocket = serverSocket;
-            _socket = socket;
+            socket = _serverSocket.Accept();
         }
 
         /// <summary>
@@ -33,10 +43,10 @@ namespace MobileDataTransfer.Unity
         public void Disconnect()
         {
             _serverSocket?.Disconnect(false);
-            _socket?.Disconnect(false);
+            socket?.Disconnect(false);
 
             _serverSocket = null;
-            _socket = null;
+            socket = null;
         }
         
         /// <summary>
@@ -44,9 +54,9 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         public void Dispose()
         {
-            _socket?.Shutdown(SocketShutdown.Both);
-            _socket?.Close();
-            _socket?.Dispose();
+            socket?.Shutdown(SocketShutdown.Both);
+            socket?.Close();
+            socket?.Dispose();
             
             _serverSocket?.Shutdown(SocketShutdown.Both);
             _serverSocket?.Close();
@@ -94,7 +104,7 @@ namespace MobileDataTransfer.Unity
         
         private int SendInternal(byte[] buffer, int length, CancellationToken cancellationToken = default)
         {
-            if (_socket == null)
+            if (socket == null)
                 throw new InvalidOperationException("Socket is not connected.");
             
             var totalSentBytes = 0;
@@ -104,7 +114,7 @@ namespace MobileDataTransfer.Unity
                 if (cancellationToken.IsCancellationRequested)
                     throw new TaskCanceledException();
 
-                var sentBytes = _socket.Send(buffer, totalSentBytes, length - totalSentBytes, SocketFlags.None);
+                var sentBytes = socket.Send(buffer, totalSentBytes, length - totalSentBytes, SocketFlags.None);
                 if (sentBytes == 0)
                     break;
 
@@ -116,7 +126,7 @@ namespace MobileDataTransfer.Unity
 
         private int ReceiveInternal(byte[] buffer, int length, CancellationToken cancellationToken = default)
         {
-            if (_socket == null)
+            if (socket == null)
                 throw new InvalidOperationException("Socket is not connected.");
             
             var totalReceivedBytes = 0;
@@ -127,7 +137,7 @@ namespace MobileDataTransfer.Unity
                     throw new TaskCanceledException();
 
                 var receivedBytes = 
-                    _socket.Receive(buffer, totalReceivedBytes, length - totalReceivedBytes, SocketFlags.None);
+                    socket.Receive(buffer, totalReceivedBytes, length - totalReceivedBytes, SocketFlags.None);
                 if (receivedBytes == 0)
                     break;
 

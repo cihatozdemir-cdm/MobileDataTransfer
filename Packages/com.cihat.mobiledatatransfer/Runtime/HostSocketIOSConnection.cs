@@ -1,30 +1,25 @@
 ﻿#if UNITY_STANDALONE || UNITY_EDITOR
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using iMobileDevice;
 using iMobileDevice.iDevice;
 
 namespace MobileDataTransfer.Unity
 {
-    public class HostSocketIOSConnection : ISocketConnection
+    public class HostSocketIOSConnection : HostSocketConnection
     {
-        public DeviceInfo deviceInfo { get; }
-
         private readonly byte[] _buffer = new byte[4096];
         private iDeviceHandle _deviceHandle;
         private iDeviceConnectionHandle _connectionHandle;
         
-        public HostSocketIOSConnection(DeviceInfo deviceInfo)
+        public HostSocketIOSConnection(DeviceInfo deviceInfo) : base(deviceInfo)
         {
-            this.deviceInfo = deviceInfo;
         }
         
         /// <summary>
         /// Connect with target device using port
         /// </summary>
         /// <param name="port"></param>
-        public void Connect(int port)
+        public override void Connect(int port)
         {
             iDeviceHandle deviceHandle = null;
             iDeviceConnectionHandle connectionHandle = null;
@@ -48,7 +43,7 @@ namespace MobileDataTransfer.Unity
         /// <summary>
         /// Disconnect from the device and clean up resources.
         /// </summary>
-        public void Disconnect()
+        public override void Disconnect()
         {
             _deviceHandle?.Dispose();
             _deviceHandle = null;
@@ -60,7 +55,7 @@ namespace MobileDataTransfer.Unity
         /// <summary>
         /// Dispose Connection
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _deviceHandle?.Dispose();
             _connectionHandle?.Dispose();
@@ -72,7 +67,7 @@ namespace MobileDataTransfer.Unity
         /// <param name="buffer">Buffer with data to send.</param>
         /// <param name="size">Size of the buffer to send.</param>
         /// <returns>The number of bytes actually sent.</returns>
-        public int Send(byte[] buffer, int size)
+        public override int Send(byte[] buffer, int size)
         {
             var deviceApi = LibiMobileDevice.Instance.iDevice;
 
@@ -88,7 +83,7 @@ namespace MobileDataTransfer.Unity
         /// large enough to hold <see cref="length"/> bytes.</param>
         /// <param name="length">Buffer size or number of bytes to receive.</param>
         /// <returns></returns>
-        public int Receive(byte[] buffer, int length)
+        public override int Receive(byte[] buffer, int length)
         {
             var deviceApi = LibiMobileDevice.Instance.iDevice;
 
@@ -96,8 +91,18 @@ namespace MobileDataTransfer.Unity
             if (_buffer.Length > length)
             {
                 uint recvBytes = 0;
-                deviceApi.idevice_connection_receive(_connectionHandle, buffer, (uint) length, ref recvBytes)
-                    .ThrowOnError();
+
+                if (receiveTimeout == 0)
+                {
+                    deviceApi.idevice_connection_receive(_connectionHandle, buffer, (uint) length, ref recvBytes)
+                        .ThrowOnError();
+                }
+                else
+                {
+                    deviceApi.idevice_connection_receive_timeout(
+                        _connectionHandle, buffer, (uint) length, ref recvBytes, receiveTimeout).ThrowOnError(); 
+                }
+
                 return (int) recvBytes;
             }
 
@@ -109,8 +114,18 @@ namespace MobileDataTransfer.Unity
                 var lengthRead = Math.Min(length - recvTotal, _buffer.Length);
 
                 uint recv = 0;
-                deviceApi.idevice_connection_receive(_connectionHandle, _buffer, (uint) lengthRead, ref recv)
-                    .ThrowOnError();
+
+                if (receiveTimeout == 0)
+                {
+                    deviceApi.idevice_connection_receive(_connectionHandle, _buffer, (uint)lengthRead, ref recv)
+                        .ThrowOnError();
+                }
+                else
+                {
+                    deviceApi.idevice_connection_receive_timeout(
+                        _connectionHandle, _buffer, (uint) lengthRead, ref recv, receiveTimeout).ThrowOnError(); 
+                }
+
                 if (recv == 0)
                 {
                     break;
@@ -121,22 +136,6 @@ namespace MobileDataTransfer.Unity
             }
 
             return recvTotal;
-        }
-        
-        /// <summary>
-        /// Async version <see cref="Send"/>.
-        /// </summary>
-        public async Task<int> SendAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() => Send(buffer, length), cancellationToken);
-        }
-
-        /// <summary>
-        /// Async version <see cref="Receive"/>.
-        /// </summary>
-        public async Task<int> ReceiveAsync(byte[] buffer, int length, CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() => Receive(buffer, length), cancellationToken);
         }
     }
 }

@@ -85,7 +85,7 @@ namespace MobileDeviceTransfer.Unity.Samples
             {
                 try
                 {
-                    socket = new HostSocketConnection(e.deviceInfo);
+                    socket = HostSocketConnection.CreateForTargetDevice(e.deviceInfo);
                     await socket.ConnectAsync(SocketTextureUtility.Port);
                     isConnected = true;
                 }
