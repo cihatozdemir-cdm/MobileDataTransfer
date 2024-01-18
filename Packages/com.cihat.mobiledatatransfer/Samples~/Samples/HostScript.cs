@@ -45,16 +45,6 @@ namespace MobileDeviceTransfer.Unity.Samples
             socket?.Dispose();
         }
 
-        private void Start()
-        {
-            _deviceWatcher = new DeviceWatcher();
-            _deviceWatcher.deviceAdded += DeviceWatcher_OnDeviceAdded;
-            _deviceWatcher.deviceRemoved += DeviceWatcher_OnDeviceRemoved;
-            _deviceWatcher.devicePaired += DeviceWatcher_OnDevicePaired;
-            _deviceWatcher.SetEnabled(true);
-            Debug.Log("Device watcher running...");
-        }
-
         private void OnDestroy()
         {
             if (_deviceWatcher != null)
@@ -163,6 +153,29 @@ namespace MobileDeviceTransfer.Unity.Samples
         {
             Debug.Log($"Device paired: {deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}]");
             deviceInfoText.text = $"{deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}] [Paired]";
+        }
+
+        public void SetDeviceWatcherActive(bool isActive)
+        {
+            if (isActive)
+            {
+                _deviceWatcher = new DeviceWatcher();
+                _deviceWatcher.deviceAdded += DeviceWatcher_OnDeviceAdded;
+                _deviceWatcher.deviceRemoved += DeviceWatcher_OnDeviceRemoved;
+                _deviceWatcher.devicePaired += DeviceWatcher_OnDevicePaired;
+                _deviceWatcher.SetEnabled(true);
+                Debug.Log("Device watcher running...");
+            }
+            else
+            {
+                if (_deviceWatcher != null)
+                {
+                    _deviceWatcher.deviceAdded -= DeviceWatcher_OnDeviceAdded;
+                    _deviceWatcher.deviceRemoved -= DeviceWatcher_OnDeviceRemoved;
+                    _deviceWatcher.devicePaired -= DeviceWatcher_OnDevicePaired;
+                    _deviceWatcher.SetEnabled(false);
+                }
+            }
         }
     }
 }

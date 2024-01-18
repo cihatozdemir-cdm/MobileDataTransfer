@@ -8,8 +8,8 @@ namespace AndroidLib.Unity
 {
         public class AndroidConnectionManager
         {
-                private readonly AndroidController _androidController = AndroidController.Instance;
-                private readonly CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+                private AndroidController _androidController;
+                private CancellationTokenSource _cancellationToken;
                 
                 private aDeviceEventCallback _onEventAnyDevice;
                 private Task _deviceSearchTask;
@@ -24,7 +24,8 @@ namespace AndroidLib.Unity
                 public void StartSearch()
                 {
                         if (_deviceSearchTask != null && _deviceSearchTask.Status == TaskStatus.Running) return;
-                        
+
+                        _cancellationToken = new CancellationTokenSource();
                         _deviceSearchTask = Task.Run(SearchAndroidDevices);
                 }
 
@@ -70,6 +71,17 @@ namespace AndroidLib.Unity
 
                         while (!_cancellationToken.IsCancellationRequested)
                         {
+                                //Check library setup is completed
+                                if (AndroidConnLib.Instance.IsReady)
+                                {
+                                        _androidController = AndroidConnLib.Instance.androidController;
+                                        break;
+                                }
+                                await Task.Delay(searchRefreshDelayInSecond * 100, _cancellationToken.Token);
+                        }
+
+                        while (!_cancellationToken.IsCancellationRequested)
+                        {
                                 var instantConnectedDevices = _androidController.ConnectedDevices;
 
                                 //If the controlled device is not in the ConnectedDevices list, it means it has been newly added.
@@ -85,14 +97,17 @@ namespace AndroidLib.Unity
                                 }
 
                                 //If the controlled device is not in the instantConnectedDevices list, it means it has been newly removed.
-                                foreach (var connectedDevice in ConnectedDevices)
+                                for (var i = 0; i < ConnectedDevices.Count; i++)
                                 {
+                                        var connectedDevice = ConnectedDevices[i];
                                         if (!instantConnectedDevices.Contains(connectedDevice))
                                         {
                                                 _onEventAnyDevice?.Invoke(new aDeviceEvent(connectedDevice,
                                                         aDeviceEventType.DeviceRemove,
                                                         aDeviceConnectionType.Usbmuxd));
                                                 ConnectedDevices.Remove(connectedDevice);
+
+                                                i--;
                                         }
                                 }
 

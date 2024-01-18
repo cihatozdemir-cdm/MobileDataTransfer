@@ -24,7 +24,7 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static ISocketConnection CreateForTargetDevice(DeviceInfo deviceInfo)
+        public static HostSocketConnection CreateForTargetDevice(DeviceInfo deviceInfo)
         {
             return deviceInfo.deviceType switch
             {

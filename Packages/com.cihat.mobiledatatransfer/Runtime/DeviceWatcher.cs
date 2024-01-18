@@ -110,8 +110,10 @@ namespace MobileDataTransfer.Unity
         /// </summary>
         private void Update()
         {
-            while (_pendingEvents.TryDequeue(out var deviceEvent))
+            while (!_pendingEvents.IsEmpty)
             {
+                if (!_pendingEvents.TryDequeue(out var deviceEvent)) break;
+                
                 var deviceInfo = availableDevices.FirstOrDefault(d => d.udid == deviceEvent.udid);
                 if (deviceInfo.udid != deviceEvent.udid)
                 {
