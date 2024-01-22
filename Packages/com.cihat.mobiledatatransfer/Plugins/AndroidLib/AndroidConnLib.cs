@@ -21,6 +21,9 @@ namespace AndroidLib.Unity
             thread.Start();
         }
 
+        /// <summary>
+        /// Start in background, because Android Library Initialize get long time.
+        /// </summary>
         private void StartInThread()
         {
             androidController = AndroidController.Instance;

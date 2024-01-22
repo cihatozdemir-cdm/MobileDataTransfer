@@ -99,7 +99,18 @@ namespace MobileDataTransfer.Unity
                 if (cancellationToken.IsCancellationRequested)
                     throw new TaskCanceledException();
 
-                var sentBytes = _socket.Send(buffer, totalSentBytes, length - totalSentBytes, SocketFlags.None);
+                //Try to send data
+                int sentBytes;
+                
+                try
+                {
+                    sentBytes = _socket.Send(buffer, totalSentBytes, length - totalSentBytes, SocketFlags.None);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
+                
                 if (sentBytes == 0)
                     break;
 
@@ -130,8 +141,19 @@ namespace MobileDataTransfer.Unity
                 if (cancellationToken.IsCancellationRequested)
                     throw new TaskCanceledException();
 
-                var receivedBytes = 
-                    _socket.Receive(buffer, totalReceivedBytes, length - totalReceivedBytes, SocketFlags.None);
+                //Try to receive data
+                int receivedBytes;
+                
+                try
+                {
+                    receivedBytes = 
+                        _socket.Receive(buffer, totalReceivedBytes, length - totalReceivedBytes, SocketFlags.None);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
+                
                 if (receivedBytes == 0)
                     break;
 

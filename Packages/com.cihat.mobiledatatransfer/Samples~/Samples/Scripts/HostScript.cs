@@ -7,7 +7,6 @@ using MobileDataTransfer.Unity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Debug = UnityEngine.Debug;
 
 namespace MobileDeviceTransfer.Unity.Samples
 {

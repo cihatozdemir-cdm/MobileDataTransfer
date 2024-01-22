@@ -1,6 +1,6 @@
 {
   "name": "com.cihat.mobiledatatransfer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Mobile Data Transfer",
   "description": "Simple data transfer and connection checker between mobile and standalone device.",
   "unity": "2017.1",
