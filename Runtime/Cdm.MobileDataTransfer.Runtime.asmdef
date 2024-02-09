@@ -1,0 +1,26 @@
+{
+    "name": "Cdm.MobileDataTransfer.Runtime",
+    "rootNamespace": "Cdm.MobileDataTransfer",
+    "references": [
+        "GUID:63b4b589da769de47809424efb0a82ad"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS",
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "iMobileDevice-net.dll",
+        "AndroidLib.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
