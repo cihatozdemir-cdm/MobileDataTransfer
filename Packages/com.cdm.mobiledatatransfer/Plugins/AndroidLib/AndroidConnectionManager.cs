@@ -36,6 +36,7 @@ namespace AndroidLib.Unity
                 {
                         _cancellationToken.Cancel();
                         _connectedDevices.Clear();
+                        _androidController.Dispose();
                         
                         _onEventAnyDevice = null;
                         _deviceSearchTask = null;
@@ -67,23 +68,13 @@ namespace AndroidLib.Unity
                 /// </summary>
                 private async Task SearchAndroidDevices()
                 {
-                        const float searchRefreshDelayInSecond = 0.5f;
-                        
-                        while (!_cancellationToken.IsCancellationRequested)
-                        {
-                                //Check library setup is completed
-                                if (AndroidConnLib.Instance.IsReady)
-                                {
-                                        _androidController = AndroidConnLib.Instance.androidController;
-                                        break;
-                                }
-                                await Task.Delay(200, _cancellationToken.Token);
-                        }
+                        const float searchRefreshDelayInSecond = 0.4f;
+
+                        _androidController = AndroidConnLib.Instance.androidController;
 
                         while (!_cancellationToken.IsCancellationRequested)
                         {
                                 var instantConnectedDevices = _androidController.ConnectedDevices;
-
                                 //If the controlled device is not in the ConnectedDevices list, it means it has been newly added.
                                 foreach (var connectedDevice in instantConnectedDevices)
                                 {

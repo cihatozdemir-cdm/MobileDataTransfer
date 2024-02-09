@@ -37,9 +37,6 @@ namespace Cdm.MobileDataTransfer
             
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.Connect(LocalHost, port);
-
-            //byte[] handshakeLabel = Encoding.UTF8.GetBytes("MobileDataTransfer.Unity.HandshakeLabel");
-            //SendInternal(handshakeLabel, handshakeLabel.Length);
         }
 
         /// <summary>

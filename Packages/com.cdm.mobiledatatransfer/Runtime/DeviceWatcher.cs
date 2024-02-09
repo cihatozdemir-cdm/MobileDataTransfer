@@ -77,7 +77,6 @@ namespace Cdm.MobileDataTransfer
                 {
                     _pendingEvents.Enqueue(new DeviceEvent(deviceEvent));
                 }).ThrowOnError();
-
             }
             catch (Exception)
             {

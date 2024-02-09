@@ -1,6 +1,6 @@
 {
   "name": "com.cdm.mobiledatatransfer",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "displayName": "Mobile Data Transfer",
   "description": "Simple data transfer and connection checker between mobile and standalone device.",
   "unity": "2017.1",

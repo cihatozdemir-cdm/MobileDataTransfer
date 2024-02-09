@@ -16,6 +16,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
         public Texture2D textureToSend;
         public RawImage image;
         public TMP_Text deviceInfoText;
+        public GameObject deviceWatcherControlPanel;
     
         private DeviceWatcher _deviceWatcher;
         private string _deviceId;
@@ -36,12 +37,16 @@ namespace Cdm.MobileDeviceTransfer.Samples
             }
         
             _cancellationTokenSource = new CancellationTokenSource();
+            
+            deviceWatcherControlPanel.SetActive(true);
         }
 
         private void OnDisable()
         {
             _cancellationTokenSource?.Cancel();
             socket?.Dispose();
+            
+            deviceWatcherControlPanel.SetActive(false);
         }
 
         private void OnDestroy()
@@ -65,7 +70,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
             if (e.deviceInfo.connectionType != DeviceConnectionType.Usbmuxd)
                 return;
         
-            deviceInfoText.text = $"{deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}]";
+            deviceInfoText.SetText($"{deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}]");
 
             Debug.Log($"Trying to connect to the device on port {SocketTextureUtility.Port}...");
 
@@ -102,6 +107,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
                 return;
         
             Debug.Log($"Connection has been established!");
+            deviceInfoText.SetText($"Connection has been established! {e.deviceInfo.udid}");
             _deviceId = e.deviceInfo.udid;
 
             var success = await SocketTextureUtility.SendAsync(socket, textureToSend);
