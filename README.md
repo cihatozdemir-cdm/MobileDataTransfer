@@ -1,16 +1,8 @@
----
-description: What is this package?
----
-
 # Mobile Data Transfer
+![Static Badge](https://img.shields.io/badge/documentation-green?style=flat-square&link=https%3A%2F%2Fcihatozdemir.gitbook.io%2Fmobile-data-transfer%2F)
 
-With the help of [Mobile Data Transfer](https://github.com/cihatozdemir-cdm/MobileDataTransfer) package, you can control the connection of your **Android** or **IOS** device to your desktop device and transfer data.
+> A Unity package for communicating with Android and iOS over USB. It is based on the iMobileDevice.Net and AndroidLib library.
 
+#Install from Package Manager:
 
-
-### Features:
-
-* Simple usage
-* You can check any device connect your desktop.
-* Easy data transfer
-* All platforms supported (Windows, MacOS, Linux, Android, IOS)
+`Package Manager > Add package from git URL...` and paste this URL: `https://github.com/cihatozdemir-cdm/MobileDataTransfer.git#1.0.0`
