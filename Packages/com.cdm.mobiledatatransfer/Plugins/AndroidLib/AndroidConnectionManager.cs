@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AndroidLib.Unity.Extensions;
 using RegawMOD.Android;
 
 namespace AndroidLib.Unity

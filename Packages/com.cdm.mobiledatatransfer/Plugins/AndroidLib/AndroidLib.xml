@@ -194,7 +194,7 @@
             <param name="args">Any arguments that need to be sent to <paramref name="executable"/></param>
             <returns><see cref="T:RegawMOD.Android.AdbCommand"/> that contains formatted command information</returns>
             <remarks>This should only be used for Adb Shell commands, such as <c>adb shell getprop</c> or <c>adb shell dumpsys</c>.</remarks>
-            <exception cref="T:RegawMOD.Android.DeviceHasNoRootException"> if <paramref name="device"/> does not have root</exception>
+            <exception cref="!:DeviceHasNoRootException"> if <paramref name="device"/> does not have root</exception>
             <example>This example demonstrates how to create an <see cref="T:RegawMOD.Android.AdbCommand"/>
             <code>
             //This example shows how to create an AdbCommand object to execute on the running server.
@@ -267,6 +267,91 @@
             <param name="localPort">Local port number</param>
             <param name="remotePort">Remote port number</param>
             <returns>True if successful, false if unsuccessful</returns>
+        </member>
+        <member name="T:RegawMOD.Android.aDeviceErrorExtensions">
+            <summary>
+            Extensions for Device Exceptions
+            </summary>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceErrorExtensions.ThrowOnError(RegawMOD.Android.aDeviceError)">
+            <summary>
+            Throw when any error occcured
+            </summary>
+            <param name="deviceError"></param>
+            <param name="message"></param>
+            <exception cref="T:RegawMOD.Android.aDeviceException"></exception>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceErrorExtensions.ThrowOnError(RegawMOD.Android.aDeviceError,System.String)">
+            <summary>
+            Throw when any error occcured
+            </summary>
+            <param name="deviceError"></param>
+            <param name="message"></param>
+            <exception cref="T:RegawMOD.Android.aDeviceException"></exception>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceErrorExtensions.IsError(RegawMOD.Android.aDeviceError)">
+            <summary>
+            Check output is give a Error
+            </summary>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:RegawMOD.Android.aDeviceException">
+            Represents an exception that occurred when interacting with the aDevice API.
+        </member>
+        <member name="F:RegawMOD.Android.aDeviceException.errorCode">
+            <summary>
+            Backing field for the <see cref="P:AndroidConnLib.androidConnectionManager.aDeviceException.ErrorCode" /> property.
+            </summary>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class.
+            </summary>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor(RegawMOD.Android.aDeviceError)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class with a specified error code.
+            </summary>
+            <param name="error">The error code of the error that occurred.</param>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor(RegawMOD.Android.aDeviceError,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class with a specified error code and error message.
+            </summary>
+            <param name="error">The error code of the error that occurred.</param>
+            <param name="message">A message which describes the error.</param>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">
+            The error message that explains the reason for the exception.
+            </param>
+            <param name="inner">
+            The exception that is the cause of the current exception, or <see langword="null" /> if no inner exception is specified.
+            </param>
+        </member>
+        <member name="M:RegawMOD.Android.aDeviceException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:AndroidConnLib.androidConnectionManager.aDeviceException" /> class with serialized data.
+            </summary>
+            <param name="info">
+            The <see cref="T:System.Runtime.Serialization.SerializationInfo" /> that holds the serialized object data about the exception being thrown.
+            </param>
+            <param name="context">
+            The <see cref="T:System.Runtime.Serialization.StreamingContext" /> that contains contextual information about the source or destination.
+            </param>
+        </member>
+        <member name="P:RegawMOD.Android.aDeviceException.ErrorCode">
+            <summary>Gets the error code that represents the error.</summary>
         </member>
         <member name="T:RegawMOD.Android.BusyBox">
             <summary>
@@ -535,6 +620,11 @@
              </code>
              </example>
         </member>
+        <member name="P:RegawMOD.Android.AndroidController.IsInitialized">
+            <summary>
+            This class is Initialized succesfully
+            </summary>
+        </member>
         <member name="P:RegawMOD.Android.AndroidController.Instance">
             <summary>
             Gets the current AndroidController Instance.
@@ -648,6 +738,23 @@
             Returns a formatted string containing all of the build properties
             </summary>
             <returns>Formatted string containing build.prop</returns>
+        </member>
+        <member name="T:RegawMOD.Android.DeviceExtensions">
+            <summary>
+            This class includes some fonctions for Device
+            </summary>
+        </member>
+        <member name="M:RegawMOD.Android.DeviceExtensions.GetDeviceName(RegawMOD.Android.Device,System.Boolean,System.Boolean)">
+            <summary>
+            Print Device Name
+            </summary>
+            <param name="device">The device you want to print name</param>
+            <param name="appendModel">Append model to end of name</param>
+            <param name="appendSerialNumber">Append serial number to end of name</param>
+            <returns></returns>
+        </member>
+        <member name="T:RegawMOD.Android.aDeviceError">
+            <summary>Error Codes</summary>
         </member>
         <member name="T:RegawMOD.Android.FastbootCommand">
             <summary>
@@ -1357,12 +1464,6 @@
             </summary>
             <param name="phoneNumber">Phone number to dial</param>
         </member>
-        <member name="T:RegawMOD.Android.DeviceHasNoRootException">
-            <summary>
-            Thrown when a root shell command is executed on a device without root
-            </summary>
-            <remarks>Only created and called internally</remarks>
-        </member>
         <member name="T:RegawMOD.Android.Su">
             <summary>
             Contains information about the Su binary on the Android device
@@ -1385,41 +1486,6 @@
             <param name="unsigned">Full path to unsigned update.zip</param>
             <returns>True if successful, false if file <paramref name="unsigned"/> does not exist or if file <paramref name="unsigned"/> is not a zip</returns>
             <remarks><para>Outputs signed zip in same directory as unsigned zip</para></remarks>
-        </member>
-        <member name="M:RegawMOD.Extract.Resources(System.Object,System.String,System.String,System.String[])">
-            <summary>
-            Extracts Multiple Embedded Resources From Calling Assembly
-            </summary>
-            <param name="obj">Object To Derive Default Namespace From</param>
-            <param name="internalFolderPath">Period . Delimited path of embedded resources in assembly</param>
-            <param name="fullPathOfItems">Exact Names Of Embedded Resources to Extract</param>
-            <param name="outDirectory">Full Directory of Path For Extracted Resources</param>
-        </member>
-        <member name="M:RegawMOD.Extract.Resources(System.String,System.String,System.String,System.String[])">
-            <summary>
-            Extracts Multiple Embedded Resources From Calling Assembly
-            </summary>
-            <param name="nameSpace">Namespace of calling assembly</param>
-            <param name="outDirectory">Full Directory of Path For Extracted Resources</param>
-            <param name="internalFolderPath">Period . Delimited path of embedded resources in assembly</param>
-            <param name="fullPathOfItems">Exact Names Of Embedded Resources to Extract</param>
-        </member>
-        <member name="M:RegawMOD.Extract.Resources(System.Object,System.String,System.String)">
-            <summary>
-            Extracts All Embedded Resources From Calling Assembly with giving internal path
-            </summary>
-            <param name="obj">Object To Derive Default Namespace From</param>
-            <param name="internalFolderPath">Period . Delimited path of embedded resources in assembly</param>
-            <param name="outDirectory">Full Directory of Path For Extracted Resources</param>
-        </member>
-        <member name="M:RegawMOD.Extract.GetFileNameInManifest(System.String,System.String,System.String@)">
-            <summary>
-            Convert Manifest string to file path
-            </summary>
-            <param name="manifest">Input manifest</param>
-            <param name="replacedfolderPath">Internal path to replace (Namespace)</param>
-            <param name="appName">Get App Name</param>
-            <returns>Return full app path</returns>
         </member>
         <member name="T:RegawMOD.Java">
             <summary>

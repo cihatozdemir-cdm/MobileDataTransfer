@@ -4,6 +4,7 @@ using AndroidLib.Unity;
 using iMobileDevice;
 using iMobileDevice.iDevice;
 using iMobileDevice.Lockdown;
+using RegawMOD.Android;
 using UnityEngine;
 
 namespace Cdm.MobileDataTransfer.Extensions

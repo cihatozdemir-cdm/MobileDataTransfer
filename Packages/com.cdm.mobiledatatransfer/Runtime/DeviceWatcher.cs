@@ -8,6 +8,7 @@ using iMobileDevice;
 using iMobileDevice.iDevice;
 using AndroidLib.Unity;
 using Cdm.MobileDataTransfer.Extensions;
+using RegawMOD.Android;
 using UnityEngine;
 
 namespace Cdm.MobileDataTransfer
@@ -31,12 +32,20 @@ namespace Cdm.MobileDataTransfer
         /// Get Device Watcher Enable state
         /// </summary>
         public bool isEnabled { get; private set; }
+        /// <summary>
+        /// IOS Events is subscribed successfully
+        /// </summary>
+        public bool isIOSInitialized { get; private set; }
+        /// <summary>
+        /// Android Events is subscribed successfully
+        /// </summary>
+        public bool isAndroidInitialized { get; private set; }
 
         /// <summary>
         /// Set DeviceWatcher Enable State
         /// </summary>
         /// <exception cref="iMobileDevice.iDevice.iDeviceException"></exception>
-        /// <exception cref="AndroidLib.Unity.aDeviceException"></exception>
+        /// <exception cref="aDeviceException"></exception>
         public void SetEnabled(bool enable)
         {
             if (enable)
@@ -71,21 +80,39 @@ namespace Cdm.MobileDataTransfer
                 {
                     _pendingEvents.Enqueue(new DeviceEvent(deviceEvent));
                 }, GCHandle.ToIntPtr(_instanceHandle)).ThrowOnError();
-                
+
+                isIOSInitialized = true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+
+            try
+            {
                 //Android Subscribe Callback
                 AndroidConnLib.Instance.androidConnectionManager.SubscribeDeviceEvent(deviceEvent =>
                 {
                     _pendingEvents.Enqueue(new DeviceEvent(deviceEvent));
                 }).ThrowOnError();
+
+                isAndroidInitialized = true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                UnityEngine.Object.Destroy(_gameObjectEventTrigger.gameObject);
-                _gameObjectEventTrigger = null;
-                throw;
+                Debug.LogWarning(e);
             }
             
-            isEnabled = true;
+            if (isAndroidInitialized || isIOSInitialized)
+                isEnabled = true;
+            else
+            {
+                isEnabled = false;
+                UnityEngine.Object.Destroy(_gameObjectEventTrigger.gameObject);
+                _gameObjectEventTrigger = null;
+                
+                throw new Exception("DeviceWatcher can't running.");
+            }
         }
         
         /// <summary>
@@ -104,9 +131,18 @@ namespace Cdm.MobileDataTransfer
 
             _instanceHandle.Free();
             isEnabled = false;
-            
-            LibiMobileDevice.Instance.iDevice.idevice_event_unsubscribe().ThrowOnError();
-            AndroidConnLib.Instance.androidConnectionManager.UnSubscribeAllDeviceEvents().ThrowOnError();
+
+            if (isIOSInitialized)
+            {
+                LibiMobileDevice.Instance.iDevice.idevice_event_unsubscribe().ThrowOnError();
+                isIOSInitialized = false;
+            }
+
+            if (isAndroidInitialized)
+            {
+                AndroidConnLib.Instance.androidConnectionManager.UnSubscribeAllDeviceEvents().ThrowOnError();
+                isAndroidInitialized = false;
+            }
         }
 
         /// <summary>

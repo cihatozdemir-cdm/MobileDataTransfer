@@ -1,5 +1,5 @@
 ﻿#if UNITY_ANDROID || UNITY_STANDALONE || UNITY_EDITOR
-using AndroidLib.Unity;
+using RegawMOD.Android;
 #endif
 #if UNITY_IOS || UNITY_STANDALONE || UNITY_EDITOR
 using iMobileDevice.iDevice;
