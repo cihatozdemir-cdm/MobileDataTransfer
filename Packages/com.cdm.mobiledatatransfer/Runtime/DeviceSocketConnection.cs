@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Cdm.MobileDataTransfer
 {
@@ -10,12 +11,22 @@ namespace Cdm.MobileDataTransfer
     {
         private Socket _serverSocket;
         public Socket socket { get; private set; }
+
+        public static DeviceSocketConnection CreateForTargetDevice(RuntimePlatform runtimePlatform)
+        {
+            return runtimePlatform switch
+            {
+                RuntimePlatform.Android => new DeviceSocketAndroidConnection(),
+                RuntimePlatform.IPhonePlayer => new DeviceSocketConnection(),
+                _ => null
+            };
+        }
         
         /// <summary>
         /// Connect with target device using socket
         /// </summary>
         /// <param name="acceptSocket"></param>
-        public void Connect(Socket acceptSocket)
+        public virtual void Connect(Socket acceptSocket)
         {
             if (socket != null && socket.Connected)
                 throw new InvalidOperationException("Disconnect current socket before using a new socket.");
@@ -28,7 +39,7 @@ namespace Cdm.MobileDataTransfer
         /// Connect with target device using port
         /// </summary>
         /// <param name="port"></param>
-        public void Connect(int port)
+        public virtual void Connect(int port)
         {
             _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, port));

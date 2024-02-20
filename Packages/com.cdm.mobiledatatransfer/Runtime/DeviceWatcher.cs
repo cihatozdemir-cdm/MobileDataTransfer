@@ -102,9 +102,11 @@ namespace Cdm.MobileDataTransfer
             {
                 Debug.LogWarning(e);
             }
-            
+
             if (isAndroidInitialized || isIOSInitialized)
+            {
                 isEnabled = true;
+            }
             else
             {
                 isEnabled = false;

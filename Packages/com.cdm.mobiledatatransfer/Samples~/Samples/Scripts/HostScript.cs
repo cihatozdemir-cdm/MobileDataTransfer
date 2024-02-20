@@ -2,7 +2,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using iMobileDevice.iDevice;
 using Cdm.MobileDataTransfer;
 using TMPro;
 using UnityEngine;
@@ -35,8 +34,6 @@ namespace Cdm.MobileDeviceTransfer.Samples
             {
                 enabled = false;
             }
-        
-            _cancellationTokenSource = new CancellationTokenSource();
             
             deviceWatcherControlPanel.SetActive(true);
         }
@@ -45,8 +42,6 @@ namespace Cdm.MobileDeviceTransfer.Samples
         {
             _cancellationTokenSource?.Cancel();
             socket?.Dispose();
-            
-            deviceWatcherControlPanel.SetActive(false);
         }
 
         private void OnDestroy()
@@ -74,6 +69,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
 
             Debug.Log($"Trying to connect to the device on port {SocketTextureUtility.Port}...");
 
+            _cancellationTokenSource = new CancellationTokenSource();
             var isConnected = false;
             while (!isConnected && !_cancellationTokenSource.IsCancellationRequested)
             {
@@ -82,14 +78,6 @@ namespace Cdm.MobileDeviceTransfer.Samples
                     socket = HostSocketConnection.CreateForTargetDevice(e.deviceInfo);
                     await socket.ConnectAsync(SocketTextureUtility.Port);
                     isConnected = true;
-                }
-                catch (iDeviceException ex)
-                {
-                    Debug.Log($"Connection failed due to {ex.ErrorCode}. Trying to connect after {connectionWaitTime} secs...");
-                
-                    isConnected = false;
-                    socket?.Dispose();
-                    socket = null;
                 }
                 catch (Exception ex)
                 {
@@ -100,7 +88,15 @@ namespace Cdm.MobileDeviceTransfer.Samples
                     socket = null;
                 }
 
-                await Task.Delay((int) (connectionWaitTime * 1000), _cancellationTokenSource.Token);
+                try
+                {
+                    if (!isConnected)
+                        await Task.Delay((int) (connectionWaitTime * 1000), _cancellationTokenSource.Token);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
             }
 
             if (socket == null)
@@ -150,6 +146,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
         private void DeviceWatcher_OnDeviceRemoved(DeviceEventArgs e)
         {
             Debug.Log($"Device removed: {deviceInfoText.name} [{e.deviceInfo.udid}] [{e.deviceInfo.connectionType}]");
+            _cancellationTokenSource?.Cancel(false);
         
             deviceInfoText.text = "Waiting for connection...";
         }
@@ -165,6 +162,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
             if (isActive)
             {
                 _deviceWatcher = new DeviceWatcher();
+                
                 _deviceWatcher.deviceAdded += DeviceWatcher_OnDeviceAdded;
                 _deviceWatcher.deviceRemoved += DeviceWatcher_OnDeviceRemoved;
                 _deviceWatcher.devicePaired += DeviceWatcher_OnDevicePaired;
@@ -179,6 +177,8 @@ namespace Cdm.MobileDeviceTransfer.Samples
                     _deviceWatcher.deviceRemoved -= DeviceWatcher_OnDeviceRemoved;
                     _deviceWatcher.devicePaired -= DeviceWatcher_OnDevicePaired;
                     _deviceWatcher.SetEnabled(false);
+                    
+                    _cancellationTokenSource?.Cancel(false);
                 }
             }
         }

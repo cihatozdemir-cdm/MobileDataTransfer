@@ -4,7 +4,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using AndroidLib.Unity;
-using AndroidLib.Unity.Extensions;
 using RegawMOD.Android;
 
 namespace Cdm.MobileDataTransfer
@@ -12,6 +11,7 @@ namespace Cdm.MobileDataTransfer
     public class HostSocketAndroidConnection : HostSocketConnection
     {
         private const string LocalHost = "127.0.0.1";
+        private const int TimeoutInMs = 1000;
 
         private Socket _socket;
 
@@ -26,17 +26,18 @@ namespace Cdm.MobileDataTransfer
         /// <param name="port"></param>
         public override void Connect(int port)
         {
-            var device = AndroidConnLib.Instance.androidController.GetConnectedDevice(deviceInfo.udid);
+            var device = AndroidConnLib.Instance.androidController.GetConnectedDevice(deviceInfo.udid, false);
             if (device == null)
             {
                 throw new aDeviceException(aDeviceError.NoDevice);
             }
             
             Adb.PortForward(device, port, port);
-            AdbExtensions.PortReverse(device, port, port);
             
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.Connect(LocalHost, port);
+
+            Handshake();
         }
 
         /// <summary>
@@ -44,8 +45,11 @@ namespace Cdm.MobileDataTransfer
         /// </summary>
         public override void Disconnect()
         {
-            _socket?.Disconnect(false);
-            _socket = null;
+            if (_socket != null && _socket.Connected)
+            {
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Disconnect(false);
+            }
         }
         
         /// <summary>
@@ -53,9 +57,8 @@ namespace Cdm.MobileDataTransfer
         /// </summary>
         public override void Dispose()
         {
-            _socket?.Shutdown(SocketShutdown.Both);
             _socket?.Close();
-            _socket?.Dispose();
+            _socket = null;
         }
 
         /// <summary>
@@ -99,7 +102,7 @@ namespace Cdm.MobileDataTransfer
             {
                 if (cancellationToken.IsCancellationRequested)
                     throw new TaskCanceledException();
-
+                
                 //Try to send data
                 var sentBytes = _socket.Send(buffer, totalSentBytes, 
                     length - totalSentBytes, SocketFlags.None);
@@ -145,6 +148,34 @@ namespace Cdm.MobileDataTransfer
             }
 
             return totalReceivedBytes;
+        }
+        
+        private void Handshake()
+        {
+            var sendRequest = this.SendInt32Async(1);
+            if (sendRequest.Wait(TimeoutInMs))
+            {
+                if (sendRequest.Result)
+                {
+                    var getRequest = this.ReceiveInt32Async();
+                    if (getRequest.Wait(TimeoutInMs))
+                    {
+                        if (getRequest.Result == 1)
+                        {
+                            Thread.Sleep(500);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        throw new aDeviceException(aDeviceError.Timeout);
+                    }
+                }
+                
+                throw new aDeviceException(aDeviceError.NotEnoughData);
+            }
+            
+            throw new aDeviceException(aDeviceError.Timeout);
         }
     }
 }

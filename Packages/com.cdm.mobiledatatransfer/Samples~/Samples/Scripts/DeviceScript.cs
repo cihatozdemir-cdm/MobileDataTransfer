@@ -25,7 +25,7 @@ namespace Cdm.MobileDeviceTransfer.Samples
             deviceInfoText.text = "Waiting for connection...";
 
             Debug.Log($"Waiting for incoming connection on port {SocketTextureUtility.Port}...");
-            using var socket = new DeviceSocketConnection();
+            using var socket = DeviceSocketConnection.CreateForTargetDevice(Application.platform);
             await socket.ConnectAsync(SocketTextureUtility.Port);
             Debug.Log($"Connected to host!");
             deviceInfoText.text = "Connected to host!";

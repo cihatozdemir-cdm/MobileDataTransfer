@@ -20,7 +20,7 @@ namespace AndroidLib.Unity
                 /// <summary>
                 /// Start Device Search
                 /// </summary>
-                public void StartSearch()
+                private void StartSearch()
                 {
                         if (_deviceSearchTask != null && _deviceSearchTask.Status == TaskStatus.Running) return;
 
@@ -31,11 +31,11 @@ namespace AndroidLib.Unity
                 /// <summary>
                 /// Clear all data
                 /// </summary>
-                public void Dispose()
+                private void Dispose()
                 {
-                        _cancellationToken.Cancel();
-                        _connectedDevices.Clear();
-                        _androidController.Dispose();
+                        _cancellationToken?.Cancel();
+                        _connectedDevices?.Clear();
+                        _androidController?.Dispose();
                         
                         _onEventAnyDevice = null;
                         _deviceSearchTask = null;
@@ -67,7 +67,7 @@ namespace AndroidLib.Unity
                 /// </summary>
                 private async Task SearchAndroidDevices()
                 {
-                        const float searchRefreshDelayInSecond = 0.4f;
+                        const float searchRefreshDelayInSecond = 0.8f;
 
                         _androidController = AndroidConnLib.Instance.androidController;
 
