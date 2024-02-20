@@ -258,6 +258,11 @@
             Start Adb Server
             </summary>
         </member>
+        <member name="M:RegawMOD.Android.Adb.KillServer">
+            <summary>
+            Kill Adb Server
+            </summary>
+        </member>
         <member name="M:RegawMOD.Android.Adb.PortForward(RegawMOD.Android.Device,System.Int32,System.Int32)">
             <summary>
             Forwards a port that remains until the current <see cref="T:RegawMOD.Android.AndroidController"/> instance is Disposed, or the device is unplugged
