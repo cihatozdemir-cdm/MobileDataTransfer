@@ -11,7 +11,7 @@ namespace Cdm.MobileDataTransfer
     public class HostSocketAndroidConnection : HostSocketConnection
     {
         private const string LocalHost = "127.0.0.1";
-        private const int TimeoutInMs = 1000;
+        private const int TimeoutInMs = 1500;
 
         private Socket _socket;
 
@@ -153,26 +153,14 @@ namespace Cdm.MobileDataTransfer
         private void Handshake()
         {
             var sendRequest = this.SendInt32Async(1);
-            if (sendRequest.Wait(TimeoutInMs))
+            if (sendRequest.Wait(TimeoutInMs) && sendRequest.Result)
             {
-                if (sendRequest.Result)
+                var getRequest = this.ReceiveInt32Async();
+                if (getRequest.Wait(TimeoutInMs) && getRequest.Result.HasValue)
                 {
-                    var getRequest = this.ReceiveInt32Async();
-                    if (getRequest.Wait(TimeoutInMs))
-                    {
-                        if (getRequest.Result == 1)
-                        {
-                            Thread.Sleep(500);
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        throw new aDeviceException(aDeviceError.Timeout);
-                    }
+                    Thread.Sleep(500);
+                    return;
                 }
-                
-                throw new aDeviceException(aDeviceError.NotEnoughData);
             }
             
             throw new aDeviceException(aDeviceError.Timeout);

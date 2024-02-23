@@ -5,7 +5,7 @@ namespace Cdm.MobileDataTransfer
 {
     public class DeviceSocketAndroidConnection : DeviceSocketConnection
     {
-        private const int TimeoutInMs = 1000;
+        private const int TimeoutInMs = 15000;
         public override void Connect(Socket acceptSocket)
         {
             base.Connect(acceptSocket);
@@ -20,26 +20,24 @@ namespace Cdm.MobileDataTransfer
             Handshake();
         }
 
-        private void Handshake()
+        private bool Handshake()
         {
             try
             {
                 var getRequest = this.ReceiveInt32Async();
-                if (getRequest.Wait(TimeoutInMs) && getRequest.Result == 1)
+                if (!getRequest.Wait(TimeoutInMs)) throw new Exception("Timeout!");
+                var sendRequest = this.SendInt32Async(1);
+                if (sendRequest.Wait(TimeoutInMs) && sendRequest.Result)
                 {
-                    var sendRequest = this.SendInt32Async(1);
-                    if (sendRequest.Wait(TimeoutInMs) && sendRequest.Result)
-                    {
-                        return;
-                    }
+                    return true;
                 }
-                
-                Dispose();
             }
             catch (Exception)
             {
-                Dispose();
+                return false;
             }
+
+            return false;
         }
     }
 }
